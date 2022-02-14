@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">"calc complex numbers "</string>
+    <string name="b">b</string>
+    <string name="c">c</string>
+    <string name="d">d</string>
+    <string name="divid">divid</string>
+    <string name="multi">multi</string>
+    <string name="a">a</string>
+    <string name="im">image</string>
+    <string name="re">real</string>
+    <string name="div_error">error with div on 0</string>
+    <string name="second_number_error_d">error with arg d in second number</string>
+    <string name="second_number_error_c">error with arg c in second number</string>
+    <string name="first_number_error_b">error with arg b in first number</string>
+    <string name="first_number_error_a">error with arg a in first number</string>
+</resources>

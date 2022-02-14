@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="a">a</string>
+    <string name="b">b</string>
+    <string name="c">c</string>
+    <string name="d">d</string>
+    <string name="divid">разделить</string>
+    <string name="multi">умножить</string>
+    <string name="app_name">калькулятор комплексных чисел</string>
+    <string name="im">мнимая часть</string>
+    <string name="re">действительная часть</string>
+    <string name="div_error">ошибка при деление на 0</string>
+    <string name="second_number_error_d">ошибка с аргументом d</string>
+    <string name="second_number_error_c">ошибка с аргументом c</string>
+    <string name="first_number_error_b">ошибка с аргументом b</string>
+    <string name="first_number_error_a">ошибка с аргументом a</string>
+</resources>
