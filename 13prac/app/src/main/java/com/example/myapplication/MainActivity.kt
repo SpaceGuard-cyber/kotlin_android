@@ -3,6 +3,7 @@ package com.example.myapplication
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.Button
@@ -11,6 +12,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.room.ColumnInfo
 import androidx.room.Room
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -22,8 +24,6 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-
-
 class AdapterShowMan(val name:Show, val mainActivity: MainActivity):RecyclerView.Adapter<AdapterShowMan.ShowmanHolder>() {
     class ShowmanHolder (val view: ViewGroup) : RecyclerView.ViewHolder(view)
 
@@ -33,7 +33,7 @@ class AdapterShowMan(val name:Show, val mainActivity: MainActivity):RecyclerView
     }
 
     override fun onBindViewHolder(holder: ShowmanHolder, position: Int) {
-        val showman = name.showList!![position]
+        val showman = name.show!!
         holder.view.findViewById<TextView>(R.id.name).text = showman.name
         holder.view.findViewById<TextView>(R.id.language).text = showman.language
         holder.view.findViewById<TextView>(R.id.genre).text = showman.genre!!.joinToString(",")
@@ -43,23 +43,8 @@ class AdapterShowMan(val name:Show, val mainActivity: MainActivity):RecyclerView
             mainActivity.startActivity(intent)
         }
     }
-    override fun getItemCount() = name.showList!!.size
+    override fun getItemCount() =  0
 }
-
-
-
-/*
-data class Name_Showmen(
-    var name: String? = null
-)
-
-//retrofit - работа с сайтами
-//room - работа с базами данных
-
-public interface APIShowMen{
-    @GET("/{Name}/")
-    fun Find_ShowMen(@Path("Name_Showmen") Name_Showmen:String): Call<List<ShowmanItem>>
-}*/
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -75,11 +60,11 @@ class MainActivity : AppCompatActivity() {
                 listDataBase = db.showmanNameDao().getAll()
             }
             val listDataBaseForOutPutName = Show(
-                showList = listDataBase!!.map {
+                newList = listDataBase!!.map {
                     Find_Showman(
-                        name = it.name,
-                        genre = listOf(it.genre),
-                        language = it.language
+                        newName = it.name,
+                        newGenre = listOf(it.genre),
+                        newLanguage = it.language
                     )
             })
             outputName.adapter = AdapterShowMan(listDataBaseForOutPutName, this@MainActivity)
@@ -95,43 +80,34 @@ class MainActivity : AppCompatActivity() {
 
             val inputName = findViewById<EditText>(R.id.inputName).text.toString()
 
-            // классический поток
-            // создается объект класса Thread туда передается runnable внутри runnable функция start
-            // создание объекта retrofit
-            val retrofit = Retrofit.Builder().baseUrl("https://api.tvmaze.com/").addConverterFactory(GsonConverterFactory.create()).build()
-
-            // получение объекта для инкапсуляции работы с интерфейсом
-            // создание объекста для интерфейса который описан
+            val retrofit = Retrofit.Builder()
+                .baseUrl("https://api.tvmaze.com/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
             val serviceName = retrofit.create(APIShowmanName::class.java)
 
             // получение объекта для вызова который единственный
             val callName = serviceName.getShowmanByName(inputName)
-
-            // осуществление вызова
-            // Callback - содержит функции, когда запросы успешно выполнены
-            // onResponse - успешно выполнено
-            // onFailure - неуспешно выполнено
-            // их надо реализовать
             callName.enqueue(object : Callback<List<Show>> {
                 override fun onResponse(call: Call<List<Show>>, response: Response<List<Show>>) {
-                    // выполнять внутри потока связанного с интерфейсом
-                    // метод post - передается лямда функция которая будет выполнена в том потоке в который связан с вводом/выводом
-                    // этот метод легче чем корутины!
-                    //outputName.post {
-                    Toast.makeText(this@MainActivity, "", Toast.LENGTH_LONG).show()
-                    val listName = response.body()!!
+                    outputName.post {
+                        val listName = response.body()!!
                         CoroutineScope(Dispatchers.IO).launch {
-                            //db.showmanNameDao().deleteAll()
-                            //db.showmanNameDao().insertAll(listName.showList!!.map{
-                            //    DataBaseShowMan(it.name!!, it.genre!!.joinToString(","), it.language!!)
-                            //})
+                            db.showmanNameDao().deleteAll()
+                            db.showmanNameDao().insertAll(listName.map {
+                                DataBaseShowMan(
+                                    it.show?.name!!,
+                                    it.show?.genre?.joinToString(",")!!,
+                                    it.show?.language!!
+                                )
+                            })
                         }
-                    //}
+                    }
                 }
 
                 override fun onFailure(call: Call<List<Show>>, t: Throwable) {
                     //outputName.post {
-                        Toast.makeText(this@MainActivity, getString(R.string.error) + t.localizedMessage, Toast.LENGTH_LONG).show()
+                        Log.e("RETROFIT_REQUEST", t.localizedMessage)
                     //}
                 }
             })

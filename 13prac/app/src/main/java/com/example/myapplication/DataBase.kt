@@ -6,8 +6,9 @@ import androidx.room.*
 data class DataBaseShowMan (
     @ColumnInfo(name="nameShowman") val name: String,
     @ColumnInfo(name="genre") val genre: String,
-    @ColumnInfo(name="language") val language: String){
-        @PrimaryKey(autoGenerate = true) var uid:Int = 0
+    @ColumnInfo(name="language") val language: String
+) {
+    @PrimaryKey(autoGenerate = true) var uid:Int = 0
 }
 
 @Dao

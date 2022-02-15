@@ -14,6 +14,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="6dp"
         android:ems="10"
+        android:text="Misha"
         android:hint="Name showman"
         android:inputType="text"
         android:minHeight="48dp" />

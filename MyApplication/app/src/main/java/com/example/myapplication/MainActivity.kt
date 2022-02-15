@@ -20,6 +20,8 @@ class CalculateTwoComplexNumbers{
     fun divforim (a: Double, b: Double, c: Double, d: Double) = (((b * c) - (a * d)) / ((c * c) + (d * d)))
 }
 
+
+
 class MainActivity : AppCompatActivity() {
     lateinit var TextViewResultre: TextView
     lateinit var TextViewResultim: TextView
