@@ -1,23 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="horizontal"
-    tools:context=".ShowManActivity">
 
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    <data>
+        <variable name="NameViewModel" type="com.example.myapplication.NameViewModel"/>
+    </data>
+
+<LinearLayout
+xmlns:app="http://schemas.android.com/apk/res-auto"
+xmlns:tools="http://schemas.android.com/tools"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+android:orientation="horizontal"
+tools:context=".ShowManActivity">
 
     <TextView
         android:id="@+id/nameShowman"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:text="@{NameViewModel.name}"/>
     <TextView
         android:id="@+id/genreShowman"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:text="@{NameViewModel.genre}"/>
     <TextView
         android:id="@+id/languageShowman"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:text="@{NameViewModel.language}"/>
 </LinearLayout>
+</layout>

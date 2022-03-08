@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.Button
+import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.widget.`AppCompatButton$InspectionCompanion`
@@ -15,141 +16,144 @@ import java.math.*
 import kotlin.math.abs
 import kotlin.math.pow
 
-/*
-class calculate {
+class FactCalculations {
 
-    private var job:Job?=null
+    private var job: Job? = null
 
-    suspend fun calculate():Double {
-        //GlobalScope.launch {
-            val number = 2.0
-            var n = 1.0
-            var res = 0.0
-            while (!n.equals(10.0E1)) {
-                res += number.pow(n)
-                //delay(3000)
-                n++
-                //launch {
-                //    listOf(res).forEach { channel.send(it.toInt()) }
-                //}
-            //}
+    private var listenerResult: ListenerResult? = null
+
+    private fun calculateFactorial(n: Int): BigInteger {
+        var fact = BigInteger.ONE
+        for (i in 1..n) {
+            fact = fact.multiply(BigInteger.valueOf(i.toLong()))
         }
-        return res
+        return generateSequence(fact) { it - BigInteger.valueOf(2) }.takeWhile { (it > BigInteger.ZERO) && !(job?.isCancelled!!) }.reduce { acc, c -> acc*c }
     }
-
-
-    fun startCalculate(){
-        GlobalScope.launch {
-            val res = calculate()
-            listenerAnswer?.receiveAnswer(res)
+    @DelicateCoroutinesApi
+    fun startCalculations(n: Int) {
+        job = GlobalScope.launch {
+            val fact = calculateFactorial(n)
+            listenerResult?.receiverResult(fact)
         }
     }
-
-    private var listenerAnswer:ListenerAnswer?=null
-
-    fun register(listenerAnswer: ListenerAnswer){
-        this.listenerAnswer = listenerAnswer
+    fun stopCalculations() {
+        job?.cancel()
     }
-
-    companion object{
-        private var calculate:calculate? = null
-        fun getInstance():calculate{
-            if (calculate==null) calculate= calculate()
-            return calculate!!
+    fun register(listenerResult: ListenerResult) {
+        this.listenerResult = listenerResult
+    }
+    companion object {
+        private var calculationsResult: FactCalculations? = null
+        fun getInstance(): FactCalculations {
+            if (calculationsResult == null) calculationsResult = FactCalculations()
+            return calculationsResult!!
         }
     }
 }
 
-interface ListenerAnswer{
-    fun receiveAnswer(answer: Double)
+interface ListenerResult {
+    fun receiverResult(result: BigInteger)
 }
-*/
-class MainActivity : AppCompatActivity(){//, ListenerAnswer {
+class MainActivity : AppCompatActivity(),ListenerResult {
 
-    //lateinit var textView:TextView
+    private lateinit var viewResult: TextView
 
-    /* flow----------------------------
-    fun generate(): Flow<Int> = flow {
-        val number = 2.0
-        var n = 1.0
-        var res = 0.0
-        while (!n.equals(10.0)) {
-            res += number.pow(n)
-            n++
-            listOf(res).forEach {
-                delay(3000)
-                emit(it.toInt()) }
-        }
-    } ----------------------------------*/
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(RESULT, viewResult.text.toString())
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //calculate.getInstance().register(this)
         setContentView(R.layout.activity_main)
-        val button = findViewById<Button>(R.id.buttonCoroutine)
-        val textView = findViewById<TextView>(R.id.textView)
-        val cancelButton = findViewById<Button>(R.id.cancel_button)
-        var job: Job?=null
-        button.setOnClickListener {
-            //calculate.getInstance().startCalculate()
-            MyIntentService.startActionNUMBER(this)
-            job = GlobalScope.launch {
-             val channel = Channel<Int>(10) // отсюда можно читать и сюда можно передавать
-                val number = BigInt(1)
-                var n = 1.0
-                var res = 0.0
-                while (!n.equals(10.0E9)) {
-                    res += number.pow(n)
-                    delay(300)
-                    n++
-                    launch {
-                        listOf(res).forEach { channel.send(it.toInt()) }
-                    }
-                    launch(Dispatchers.Main) {
-                        textView.text = res.toString()
-                    }
-                }
-            }
-        /* flow ---------------------------------------------------------------------------------------
-        GlobalScope.launch(Dispatchers.Main) {
-            generate().filter { it%2==0 }.collectLatest{
-                value -> Toast.makeText(this@MainActivity, value.toString(), Toast.LENGTH_LONG).show()
-            }
-        }----------------------------------------------------------------------------------------------*/
+        FactCalculations.getInstance().register(this)
 
-            /* Coroutine------------------------------------------------------------------------------------
-            GlobalScope.launch {
-                val channel = Channel<Int>(10) // отсюда можно читать и сюда можно передавать
-                val number = 2.0
-                var n = 1.0
-                var res = 0.0
-                while (!n.equals(10.0)) {
-                    res += number.pow(n)
-                    n++
-                    launch {
-                        listOf(res).forEach { channel.send(it.toInt()) }
-                        //channel.close()
-                    }
-                    launch(Dispatchers.Main) {
-                        repeat(10) {
-                            val n = channel.receive()
-                        //for (n in channel){
-                            Toast.makeText(this@MainActivity, n.toString(), Toast.LENGTH_LONG).show()
-                            delay(3000)
-                        }
-                    }
-                }
-            } -------------------------------------------------------------------------------------------------*/
+        val enterNumber = findViewById<EditText>(R.id.enterNumber)
+        val calcFact = findViewById<Button>(R.id.calculateFactorialButton)
+        val stopCalc = findViewById<Button>(R.id.stopCalculationsButton)
+        viewResult = findViewById(R.id.viewAnswer)
+
+        var job: Job? = null
+
+        if (savedInstanceState != null) {
+            viewResult.text = savedInstanceState.getString(RESULT)
         }
-        cancelButton.setOnClickListener {
-            job?.cancel()
+
+        calcFact.setOnClickListener {
+            val num = enterNumber.text.toString().toIntOrNull()
+
+            if (num != null) {
+                if (num in 1..9) {
+                    job = GlobalScope.launch {
+                        FactCalculations.getInstance().startCalculations(num)
+                    }
+                } else Toast.makeText(this, getString(R.string.NumberRange), Toast.LENGTH_SHORT).show()
+            } else Toast.makeText(this, getString(R.string.EmptyString), Toast.LENGTH_SHORT).show()
+        }
+
+        stopCalc.setOnClickListener {
+            FactCalculations.getInstance().stopCalculations()
         }
     }
 
+    override fun receiverResult(result: BigInteger) {
+        GlobalScope.launch(Dispatchers.Main) {
+            viewResult.text = String.format("%d", result)
+        }
+    }
+
+    companion object {
+        const val RESULT = "Result"
+    }
+}
+//lateinit var textView:TextView
+
+/* flow----------------------------
+fun generate(): Flow<Int> = flow {
+    val number = 2.0
+    var n = 1.0
+    var res = 0.0
+    while (!n.equals(10.0)) {
+        res += number.pow(n)
+        n++
+        listOf(res).forEach {
+            delay(3000)
+            emit(it.toInt()) }
+    }
+} ----------------------------------*/
+/* flow ---------------------------------------------------------------------------------------
+       GlobalScope.launch(Dispatchers.Main) {
+           generate().filter { it%2==0 }.collectLatest{
+               value -> Toast.makeText(this@MainActivity, value.toString(), Toast.LENGTH_LONG).show()
+           }
+       }----------------------------------------------------------------------------------------------*/
+
+/* Coroutine------------------------------------------------------------------------------------
+GlobalScope.launch {
+    val channel = Channel<Int>(10) // отсюда можно читать и сюда можно передавать
+    val number = 2.0
+    var n = 1.0
+    var res = 0.0
+    while (!n.equals(10.0)) {
+        res += number.pow(n)
+        n++
+        launch {
+            listOf(res).forEach { channel.send(it.toInt()) }
+            //channel.close()
+        }
+        launch(Dispatchers.Main) {
+            repeat(10) {
+                val n = channel.receive()
+            //for (n in channel){
+                Toast.makeText(this@MainActivity, n.toString(), Toast.LENGTH_LONG).show()
+                delay(3000)
+            }
+        }
+    }
     /*override fun receiveAnswer(answer: Double) {
         GlobalScope.launch(Dispatchers.Main){
         textView.text = answer.toString()
         }
     }*/
-}
+} -------------------------------------------------------------------------------------------------*/
 
